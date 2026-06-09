@@ -321,6 +321,44 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       line-height: 1.5;
     }
 
+    /* ── Commentator dog ────────────────────────────── */
+    #commentator {
+      position: fixed; bottom: 14px; left: 14px;
+      z-index: 200; display: flex;
+      flex-direction: column; align-items: flex-start;
+      gap: 4px; pointer-events: none;
+    }
+    #comment-bubble {
+      background: rgba(14,8,32,.97);
+      border: 2px solid #9b5de5;
+      border-radius: 14px 14px 14px 2px;
+      padding: 7px 12px;
+      font-size: .78rem; color: #e8e0ff;
+      max-width: 190px; line-height: 1.45;
+      font-style: italic;
+      animation: bubbleIn .35s ease;
+    }
+    #comment-dog {
+      width: 110px; height: 80px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 2px solid #9b5de5;
+      display: block;
+      transition: opacity .3s;
+    }
+    @keyframes bubbleIn {
+      from { opacity:0; transform: translateY(6px) scale(.88); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── GIF inserts ─────────────────────────────────── */
+    .gif-center  { display: flex; justify-content: center; margin: .8rem 0; }
+    .gif-small   { width: 120px; border-radius: 8px; }
+    .gif-medium  { width: 160px; border-radius: 8px; }
+    .gif-row     { display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap; }
+    .gif-row img { width: 150px; border-radius: 8px; }
+    #no-gif-reaction { position: fixed; z-index: 999; display: none; width: 110px; pointer-events: none; border-radius: 8px; }
+
     /* ── Confetti ────────────────────────────────────── */
     .confetti-piece {
       position: fixed; top: -12px; z-index: 400;
@@ -338,6 +376,11 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 <div id="stars"></div>
 <div id="tip"></div>
 <div id="escape-toast"></div>
+
+<div id="commentator">
+  <div id="comment-bubble">...esto va a ser bueno 🐾</div>
+  <img id="comment-dog" src="https://media1.tenor.com/m/uiras-rjLrsAAAAd/evil-laugh-rub-hands.gif" alt="" />
+</div>
 
 <!-- ════════════════════ SCREEN 1 — INTRO ════════════════════ -->
 <div class="screen active" id="s-intro">
@@ -357,6 +400,9 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   </div>
   <div class="prog-wrap"><div class="prog-fill" id="prog"></div></div>
   <p id="prog-label" class="muted" style="margin-bottom:.2rem;">Consultando las estrellas...</p>
+  <div class="gif-center" id="calc-gif">
+    <img src="https://media1.tenor.com/m/MFE6UiMEpRoAAAAd/math-zack-galifianakis.gif" class="gif-medium" alt="" />
+  </div>
 
   <div id="compat-result" style="display:none">
     <div class="compat-number" id="compat-num">0%</div>
@@ -377,11 +423,12 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   <p class="muted" style="margin-bottom:.2rem;">(spoiler: los astros dicen lo que yo quiero)</p>
   <h1 style="margin-top:.8rem;">Veredicto astral:<br>cenas conmigo este sábado.<br><span style="font-size:.6em; color:#cdbff5;">No es negociable.</span></h1>
   <div id="q-area">
-    <button class="btn btn-yes" onclick="goTo('s-calendar')">✅ Acepto mi destino</button>
+    <button class="btn btn-yes" onclick="acceptDestiny()">✅ Acepto mi destino</button>
   </div>
 </div>
 
 <button class="btn btn-no" id="btn-no">❌ No</button>
+<img id="no-gif-reaction" src="" alt="" />
 
 <!-- ════════════════ SCREEN 3b — TODO GESTIONADO ════════════ -->
 <div class="screen" id="s-handled">
@@ -428,6 +475,9 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   <p style="color:#ffd700; font-size:1.1rem; font-weight:bold; margin-top:.5rem;">
     Tu única tarea: aparecer.
   </p>
+  <div class="gif-center">
+    <img src="https://media1.tenor.com/m/gsipZ3llFhEAAAAd/mic-drop-barack-obama.gif" class="gif-medium" alt="" />
+  </div>
   <button class="btn" onclick="goTo('s-venue')" style="margin-top:1.2rem;">Eso sí puedo hacerlo →</button>
 </div>
 
@@ -522,6 +572,10 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     </div>
   </div>
 
+  <div class="gif-row">
+    <img src="https://media1.tenor.com/m/mLCQiYN8LxcAAAAd/cat-spin-oiia-spinning-cat.gif" alt="" />
+  </div>
+
   <p class="footer-note">
     Nota legal: El 97.3% de compatibilidad fue inventado. La astrología no tiene ninguna validez científica.<br>
     La cita, en cambio, sí es real.
@@ -543,11 +597,20 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 
 // ── Screen transitions ──────────────────────────────────────
 function goTo(id) {
+  // s-compat: muestra el comentario en la pantalla actual y espera antes de transicionar
+  if (id === 's-compat') {
+    updateComment('s-compat');
+    setTimeout(() => _doGoTo('s-compat'), 1400);
+    return;
+  }
+  _doGoTo(id);
+}
+function _doGoTo(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const t = document.getElementById(id);
   if (!t) return;
   t.classList.add('active');
-  // Mostrar/ocultar botón No solo en la pantalla de pregunta
+  if (id !== 's-compat') updateComment(id); // s-compat ya actualizado antes del delay
   noBtn.style.display = (id === 's-question') ? 'block' : 'none';
   if (id === 's-compat')   startCompat();
   if (id === 's-calendar') buildCal();
@@ -581,6 +644,7 @@ function startCompat() {
     if (pct >= 97.3) {
       clearInterval(iv);
       setTimeout(() => {
+        document.getElementById('calc-gif').style.display = 'none';
         result.style.display = 'block';
         animNum(num, 97.3);
       }, 400);
@@ -610,16 +674,33 @@ const noLines = [
   'Vale. Los planetas se rindieron. Yo no.',
 ];
 let noCnt = 0, toastTimer;
+const noGifUrls = [
+  'https://media1.tenor.com/m/-AVhzAV29TkAAAAd/dikembe-mutombo.gif',
+  'https://media1.tenor.com/m/AYOKMQ_xKEAAAAAd/nuh-uh-meme-nuh-uh.gif',
+  'https://media1.tenor.com/m/kSuVsmlrrYUAAAAd/grizzy-and-the-lemmings-nuh-uh-huh-no-nah-nope-não.gif',
+  'https://media1.tenor.com/m/phyvUEXrZAUAAAAd/the-cat-in-the-hat-uh-no.gif',
+  'https://media1.tenor.com/m/R0McWOZWpVkAAAAd/nope.gif',
+];
+const noGifEl = document.getElementById('no-gif-reaction');
+let noGifTimer;
 
 noBtn.addEventListener('mouseover', () => {
   const bw = noBtn.offsetWidth  + 20;
   const bh = noBtn.offsetHeight + 20;
   const maxX = window.innerWidth  - bw;
   const maxY = window.innerHeight - bh;
-  noBtn.style.left   = Math.max(10, Math.random() * maxX) + 'px';
-  noBtn.style.top    = Math.max(10, Math.random() * maxY) + 'px';
+  const nx = Math.max(10, Math.random() * maxX);
+  const ny = Math.max(10, Math.random() * maxY);
+  noBtn.style.left   = nx + 'px';
+  noBtn.style.top    = ny + 'px';
   noBtn.style.bottom = 'auto';
   noBtn.style.right  = 'auto';
+  noGifEl.src = noGifUrls[noCnt % noGifUrls.length];
+  noGifEl.style.left = Math.min(nx, window.innerWidth - 130) + 'px';
+  noGifEl.style.top  = Math.max(10, ny - 130) + 'px';
+  noGifEl.style.display = 'block';
+  clearTimeout(noGifTimer);
+  noGifTimer = setTimeout(() => { noGifEl.style.display = 'none'; }, 2000);
   showToast(noLines[Math.min(noCnt, noLines.length - 1)]);
   noCnt++;
 });
@@ -771,6 +852,54 @@ function buildTicket() {
     colorLight: '#0d001f',
     correctLevel: QRCode.CorrectLevel.L,
   });
+}
+
+// ── Commentator ─────────────────────────────────────────────
+const COMMENTS = {
+  's-intro':    '...esto va a ser bueno 🐾',
+  // s-compat: sin comentario
+  's-question': 'dale al "No", atrévete...',
+};
+// GIFs de Giphy por pantalla (IDs estables, sin token de sesión)
+const GIFS = {
+  's-intro':    'https://media1.tenor.com/m/uiras-rjLrsAAAAd/evil-laugh-rub-hands.gif',
+  // s-compat: sin gif
+  // s-question: sin gif, solo texto
+  // s-handled, s-calendar, s-venue, s-ticket: sin gif
+};
+const commentBubble = document.getElementById('comment-bubble');
+const commentDog    = document.getElementById('comment-dog');
+
+function updateComment(id) {
+  const msg = COMMENTS[id];
+  if (!msg) {
+    commentBubble.style.display = 'none';
+    commentDog.style.opacity = '0';
+    setTimeout(() => { commentDog.style.display = 'none'; }, 150);
+    return;
+  }
+  commentBubble.style.display = 'block';
+  commentBubble.style.animation = 'none';
+  void commentBubble.offsetWidth;
+  commentBubble.style.animation = 'bubbleIn .35s ease';
+  commentBubble.textContent = msg;
+  const gif = GIFS[id];
+  if (gif) {
+    commentDog.style.opacity = '0';
+    setTimeout(() => {
+      commentDog.src = gif;
+      commentDog.style.display = 'block';
+      commentDog.style.opacity = '1';
+    }, 150);
+  } else {
+    commentDog.style.opacity = '0';
+    setTimeout(() => { commentDog.style.display = 'none'; }, 150);
+  }
+}
+
+// ── Sí button ────────────────────────────────────────────────
+function acceptDestiny() {
+  goTo('s-calendar');
 }
 
 // ── Confetti ────────────────────────────────────────────────
